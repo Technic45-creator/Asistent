@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asistent — голосовий помічник «Норі» для Windows</title>
+<meta name="description" content="Asistent — голосовий помічник для Windows. Керуйте комп’ютером голосом: скажіть «Норі» і назвіть команду. Завантажити безкоштовно.">
+<link rel="icon" href="photo/logo.avif">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marck+Script&display=swap" rel="stylesheet">
+<style>
+@font-face{
+  font-family:"Zakon";
+  src:local("Zakon"),url("fonts/Zakon.woff2") format("woff2"),url("fonts/Zakon.ttf") format("truetype"),url("fonts/Zakon.otf") format("opentype");
+  font-weight:100 900;font-style:normal;font-display:swap;
+}
+:root{
+  --deep:#2740b0;
+  --ink:#0f1f66;
+  --sky:#5bb8ff;
+  --mist:#e8f4ff;
+  --teal:#00c4d6;
+  --white:#ffffff;
+  --script:"Marck Script","Segoe Script","Comic Sans MS",cursive;
+  --sans:"Zakon","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{
+  font-family:var(--sans);color:var(--white);line-height:1.6;
+  background:var(--deep);
+  background-image:radial-gradient(ellipse 80% 55% at 50% 38%,#2740b0 0%,#2f56c8 45%,#4aa3f2 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--white);outline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* top bar */
+header{padding:18px 0}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-family:var(--script);font-size:1.6rem}
+.brand img{width:40px;height:40px;border:2px solid var(--white)}
+nav{display:flex;gap:22px;font-weight:500;font-size:.95rem}
+nav a{text-decoration:none;opacity:.9}
+nav a:hover{opacity:1;text-decoration:underline;text-underline-offset:5px}
+
+/* hero */
+.hero{padding:48px 0 72px;text-align:center}
+.hero h1{font-family:var(--script);font-weight:400;font-size:clamp(2.6rem,7vw,5rem);line-height:1.1;margin-bottom:16px}
+.hero p.lead{max-width:600px;margin:0 auto 30px;font-size:1.15rem;opacity:.95}
+.btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn{
+  display:inline-block;padding:15px 30px;font:700 1.05rem var(--sans);text-decoration:none;
+  border:2px solid var(--white);background:linear-gradient(180deg,#3d6be0,var(--ink));color:var(--white);
+  transition:background .2s,color .2s;cursor:pointer;
+}
+.btn:hover{background:var(--white);color:var(--ink)}
+.btn.light{background:transparent}
+.meta{margin-top:14px;font-size:.9rem;opacity:.85}
+.shot-hero{margin:48px auto 0;max-width:800px}
+
+/* window frame for screenshots */
+.win{border:1px solid rgba(255,255,255,.7);background:var(--white);box-shadow:0 20px 50px rgba(8,18,80,.5)}
+.win img{display:block;width:100%;height:auto;cursor:zoom-in}
+.state-switch{display:flex;justify-content:center;gap:10px;margin-bottom:14px}
+.state-switch button{
+  font:600 .95rem var(--sans);padding:8px 18px;border:2px solid var(--white);background:transparent;color:var(--white);cursor:pointer;
+}
+.state-switch button[aria-pressed="true"]{background:var(--white);color:var(--ink)}
+
+/* sections */
+section{padding:64px 0}
+section.panel{background:rgba(15,31,102,.55)}
+h2{font-family:var(--script);font-weight:400;font-size:clamp(2rem,4.5vw,3rem);margin-bottom:14px;line-height:1.15}
+.sub{max-width:640px;opacity:.92;margin-bottom:36px}
+
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid rgba(255,255,255,.5)}
+.how div{padding:26px;border-right:1px solid rgba(255,255,255,.5)}
+.how div:last-child{border-right:0}
+.how h3{font-size:1.1rem;margin-bottom:8px}
+.how b{font-family:var(--script);font-weight:400;font-size:1.5rem;color:var(--mist)}
+
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:36px 48px}
+.features h3{font-size:1.1rem;margin-bottom:6px}
+.features p{opacity:.92}
+
+.split{display:grid;grid-template-columns:1fr 1.15fr;gap:40px;align-items:center}
+.split.rev{grid-template-columns:1.15fr 1fr}
+.split ul{list-style:none;margin-top:6px}
+.split li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.3)}
+
+.cmds{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.cmds code{font:500 .9rem Consolas,"Courier New",monospace;padding:4px 10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4)}
+
+/* custom commands guide */
+.guide .split{margin-bottom:56px}
+.guide h3{font-family:var(--script);font-weight:400;font-size:1.9rem;margin-bottom:8px}
+.guide ol,.guide ul{margin:8px 0 0 1.2em}
+.guide li{margin-bottom:6px}
+.fields{width:100%;border-collapse:collapse;margin-top:10px;font-size:.95rem}
+.fields th,.fields td{padding:8px 10px;border:1px solid rgba(255,255,255,.4);text-align:left;vertical-align:top}
+.fields th{width:38%;background:rgba(255,255,255,.1);font-weight:700}
+.guide code.k{font:500 .9rem Consolas,"Courier New",monospace;padding:1px 6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35)}
+.guide pre{margin-top:12px;padding:14px 16px;overflow-x:auto;background:rgba(5,12,60,.6);border:1px solid rgba(255,255,255,.4);font:500 .9rem/1.5 Consolas,"Courier New",monospace}
+.guide .tip{margin-top:14px;padding:12px 16px;border-left:4px solid var(--white);background:rgba(255,255,255,.12)}
+.guide figcaption{margin-top:8px;font-size:.85rem;opacity:.85;text-align:center}
+
+/* download */
+.download{text-align:center}
+.download .box{max-width:620px;margin:0 auto;padding:40px 28px;border:2px solid var(--white);background:rgba(15,31,102,.6)}
+.download img.logo{width:96px;height:96px;border:2px solid var(--white);margin-bottom:18px}
+.ver{max-width:360px;margin:22px auto 0;text-align:left}
+.ver label{display:block;margin-bottom:6px;font-weight:700}
+.ver select{width:100%;padding:12px 14px;font:inherit;color:var(--white);background:var(--ink);border:2px solid var(--white);cursor:pointer}
+.download dl{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;text-align:left;max-width:360px;margin:22px auto 28px}
+.download dt{opacity:.8}
+.download dd{font-weight:700}
+
+details{border-bottom:1px solid rgba(255,255,255,.4);padding:16px 0}
+summary{cursor:pointer;font-weight:700;font-size:1.05rem}
+details p{margin-top:10px;opacity:.92;max-width:720px}
+
+footer{padding:36px 0;text-align:center;font-size:.9rem;opacity:.85}
+
+/* lightbox */
+#lb{position:fixed;inset:0;background:rgba(5,12,60,.92);display:none;align-items:center;justify-content:center;padding:24px;z-index:10;cursor:zoom-out}
+#lb.open{display:flex}
+#lb img{max-width:100%;max-height:100%;border:1px solid var(--white)}
+
+@media (max-width:820px){
+  nav{display:none}
+  .how,.features,.split,.split.rev{grid-template-columns:1fr}
+  .guide .split.rev figure{order:2}
+  .how div{border-right:0;border-bottom:1px solid rgba(255,255,255,.5)}
+  .how div:last-child{border-bottom:0}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="photo/logo.avif" alt="Логотип Asistent"> Asistent</a>
+    <nav aria-label="Розділи сайту">
+      <a href="#how">Як це працює</a>
+      <a href="#features">Можливості</a>
+      <a href="#screens">Інтерфейс</a>
+      <a href="#custom">Свої команди</a>
+      <a href="#faq">Питання</a>
+      <a href="#download">Завантажити</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<div class="wrap hero">
+  <h1>Скажіть «Норі» — і комп’ютер слухає</h1>
+  <p class="lead">Asistent ваш персональний помічник. Відкриває програми й сайти, вимикає комп’ютер, керує Spotify і відповідає на запитання за допомогою ШІ.</p>
+  <div class="btns">
+    <a class="btn" href="#download">Завантажити для Windows</a>
+    <a class="btn light" href="#screens">Подивитися інтерфейс</a>
+  </div>
+  <p class="meta">Версія 3.0 (тест) · українською мовою</p>
+  <div class="shot-hero win"><img src="photo/2.avif" alt="Головне вікно Asistent під час роботи: помічник очікує слово «Норі» або F10" width="800" height="450"></div>
+</div>
+
+<section class="panel" id="how">
+  <div class="wrap">
+    <h2>Як це працює</h2>
+    <p class="sub">Три кроки від запуску до першої команди.</p>
+    <div class="how">
+      <div><b>1.</b><h3>Увімкніть</h3><p>Натисніть «Увімкнути» у головному вікні. Статус зміниться на «працює».</p></div>
+      <div><b>2.</b><h3>Покличте</h3><p>Скажіть ім’я помічника — «Норі» — або натисніть клавішу F10.</p></div>
+      <div><b>3.</b><h3>Скажіть команду</h3><p>Наприклад, «відкрий браузер». Помічник виконає її й відповість голосом.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2>Що вміє Норі</h2>
+    <p class="sub">Усе потрібне для щоденного керування комп’ютером голосом.</p>
+    <div class="features">
+      <div><h3>Голосове керування</h3><p>Калькулятор, провідник, блокнот, робочий стіл, блокування, сон, перезавантаження та вимкнення — одним реченням.</p></div>
+      <div><h3>Інтернет і музика</h3><p>Відкриває Google і YouTube, запускає Spotify.</p></div>
+      <div><h3>Відповіді від ШІ</h3><p>Підключіть власний ключ API й оберіть модель — і Норі зможе підтримати розмову. Кнопка «Перевірити ключ і обрати модель» допоможе з налаштуванням.</p></div>
+      <div><h3>Свої команди</h3><p>Створюйте, редагуйте й видаляйте команди, імпортуйте власні скрипти. Фразу можна перевірити, не промовляючи її вголос.</p></div>
+      <div><h3>Ваш голос і ваше ім’я</h3><p>Оберіть голос серед встановлених у Windows, налаштуйте гучність і змініть ім’я помічника на будь-яке.</p></div>
+      <div><h3>Працює тихо</h3><p>Автозапуск із Windows, автооновлення, згортання в трей і вимикач мікрофона, коли потрібна тиша.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="screens">
+  <div class="wrap">
+    <h2>Інтерфейс</h2>
+    <p class="sub">Простий інтерфейс із чотирма екранами. Натисніть на знімок, щоб збільшити.</p>
+
+    <div class="state-switch" role="group" aria-label="Стан помічника">
+      <button type="button" aria-pressed="false" data-src="photo/1.avif" data-alt="Головне вікно: помічник зупинено">Зупинено</button>
+      <button type="button" aria-pressed="true" data-src="photo/2.avif" data-alt="Головне вікно: помічник працює і очікує слово «Норі» або F10">Працює</button>
+    </div>
+    <div class="win" style="max-width:800px;margin:0 auto 64px"><img id="stateImg" src="photo/2.avif" alt="Головне вікно: помічник працює і очікує слово «Норі» або F10" width="800" height="450"></div>
+
+    <div class="split" style="margin-bottom:64px">
+      <div>
+        <h3 style="font-family:var(--script);font-weight:400;font-size:1.9rem;margin-bottom:8px">Загальні налаштування</h3>
+        <ul>
+          <li>Голосова модель та гучність</li>
+          <li>Ім’я асистента</li>
+          <li>Автозавантаження й автооновлення</li>
+          <li>Відображення логів</li>
+          <li>Дані користувача, ключ API та модель ШІ</li>
+        </ul>
+      </div>
+      <div class="win"><img src="photo/3.avif" alt="Вікно загальних налаштувань Asistent" width="800" height="450" loading="lazy"></div>
+    </div>
+
+    <div class="split rev">
+      <div class="win"><img src="photo/4.avif" alt="Вікно налаштування команд зі списком доступних команд" width="800" height="450" loading="lazy"></div>
+      <div>
+        <h3 style="font-family:var(--script);font-weight:400;font-size:1.9rem;margin-bottom:8px">Налаштування команд</h3>
+        <p>Перелік усіх команд, перевірка фрази кнопкою «Що спрацює?», а також створення, редагування, видалення та імпорт скриптів.</p>
+        <div class="cmds" aria-label="Вбудовані команди">
+          <code>calculator</code><code>clipboard</code><code>explorer</code><code>notepad</code><code>open_google</code><code>open_youtube</code><code>spotify</code><code>show_desktop</code><code>lock</code><code>sleep</code><code>reboot</code><code>shutdown</code><code>talk</code><code>talk_stop</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="guide" id="custom">
+  <div class="wrap">
+    <h2>Додавання власних команд</h2>
+    <p class="sub">Створіть команду за кілька хвилин: задайте фрази, за якими вона спрацьовує, і дію, яку виконає Норі.</p>
+
+    <div class="split">
+      <div>
+        <h3>1. Відкрийте форму</h3>
+        <ol>
+          <li>У головному вікні натисніть кнопку із шестірнею.</li>
+          <li>Перейдіть на вкладку «Налаштування команд».</li>
+          <li>Натисніть «Створити». Відкриється вікно «Нова команда».</li>
+        </ol>
+        <p class="tip">Хочете змінити наявну команду? Оберіть її у списку ліворуч і натисніть «Редагувати».</p>
+      </div>
+      <figure><div class="win"><img src="photo/6.avif" alt="Порожня форма «Нова команда»" width="540" height="377" loading="lazy"></div><figcaption>Порожня форма нової команди</figcaption></figure>
+    </div>
+
+    <div class="split rev">
+      <figure><div class="win"><img src="photo/5.avif" onerror="this.onerror=null;this.src='photo/5_1.avif'" alt="Список типів дії у формі нової команди" width="640" height="470" loading="lazy"></div><figcaption>Вибір типу дії</figcaption></figure>
+      <div>
+        <h3>2. Заповніть поля</h3>
+        <table class="fields">
+          <tr><th>ID / Ключ команди</th><td>Унікальна назва латиницею без пробілів, наприклад <code class="k">open_google</code>.</td></tr>
+          <tr><th>Ключові слова (через кому)</th><td>Слова й фрази, за якими команда спрацює: <code class="k">інтернет, браузер</code>.</td></tr>
+          <tr><th>Тип дії (action)</th><td>Що саме зробить команда. Оберіть зі списку.</td></tr>
+          <tr><th>Параметри дії (JSON)</th><td>Налаштування дії у форматі JSON. Залежать від типу дії.</td></tr>
+          <tr><th>Відповідь (варіанти через |)</th><td>Що скаже Норі. Кілька варіантів розділяйте рискою: <code class="k">Відкриваю браузер. | Зараз буде.</code></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="split">
+      <div>
+        <h3>3. Оберіть тип дії</h3>
+        <ul>
+          <li><code class="k">open_website</code> — відкрити сайт</li>
+          <li><code class="k">launch_application</code> — запустити програму</li>
+          <li><code class="k">run_command</code> — виконати команду чи файл</li>
+          <li><code class="k">hotkey</code>, <code class="k">hotkey_map</code> — натиснути комбінацію клавіш</li>
+          <li><code class="k">start_dialog</code>, <code class="k">stop_dialog</code> — почати й завершити розмову</li>
+          <li><code class="k">exit</code> — закрити помічника</li>
+        </ul>
+        <p class="tip">Не знаєте, як записати параметри для певного типу? Відкрийте схожу вбудовану команду кнопкою «Редагувати» і скопіюйте її параметри за зразок.</p>
+      </div>
+      <div>
+        <h3>4. Приклад: команда «shutdown»</h3>
+        <p>Так виглядає вбудована команда вимкнення комп’ютера.</p>
+        <table class="fields">
+          <tr><th>ID / Ключ</th><td><code class="k">shutdown</code></td></tr>
+          <tr><th>Ключові слова</th><td>вимкни, виключи, вимкнений</td></tr>
+          <tr><th>Тип дії</th><td><code class="k">run_command</code></td></tr>
+          <tr><th>Відповідь</th><td>Вимикаю комп’ютер.</td></tr>
+        </table>
+        <p style="margin-top:12px">Параметри дії (JSON):</p>
+<pre>{
+    "cmd": "SlideToShutDown.exe"
+}</pre>
+        <p class="tip">Додатковий параметр <code class="k">"ai_variants": false (або true)</code> вимикає і вмикає варіанти відповіді від ШІ для цієї команди. Додайте його в JSON через кому після інших параметрів:</p>
+<pre>{
+    "cmd": "SlideToShutDown.exe",
+    "ai_variants": false
+}</pre>
+      </div>
+    </div>
+
+    <div class="split rev">
+      <figure><div class="win"><img src="photo/7.avif" alt="Вікно редагування команди shutdown із заповненими полями" width="540" height="377" loading="lazy"></div><figcaption>Заповнена команда «shutdown»</figcaption></figure>
+      <div>
+        <h3>5. Збережіть і перевірте</h3>
+        <ol>
+          <li>Натисніть «Зберегти». Команда з’явиться у списку.</li>
+          <li>У полі «Фраза для перевірки» введіть фразу, наприклад «вимкни комп’ютер».</li>
+          <li>Натисніть «Що спрацює?». Помічник покаже, яка команда відповідає цій фразі, і нічого не виконає.</li>
+        </ol>
+        <p class="tip">Є готовий скрипт? Скористайтеся кнопкою «Імпорт скрипта». Усі скрипти лежать у теці, яку відкриває кнопка «Відкрити теку скриптів».</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="download" id="download">
+  <div class="wrap">
+    <div class="box">
+      <img class="logo" src="photo/logo.avif" alt="Логотип Asistent">
+      <h2>Завантажити Asistent</h2>
+      <p>Безкоштовна тестова версія для Windows.</p>
+      <div class="ver">
+        <label for="verSel">Версія для встановлення</label>
+        <select id="verSel"></select>
+      </div>
+      <dl>
+        <dt>Версія</dt><dd id="vName">—</dd>
+        <dt>Система</dt><dd>Windows</dd>
+        <dt>Мова</dt><dd>Українська</dd>
+        <dt>Файл</dt><dd id="vFile">—</dd>
+      </dl>
+      <a class="btn" id="vBtn" href="#download" rel="noopener">Завантажити</a>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="faq">
+  <div class="wrap">
+    <h2>Часті питання</h2>
+    <details><summary>Конфіденційність: куди потрапляють мої дані?</summary><p>Нікуди. Усі налаштування, дані користувача, ключ API, логи та власні команди зберігаються лише на вашому комп’ютері й нікуди не відправляються. Розпізнавання команд і керування комп’ютером відбуваються локально. Якщо ви самостійно підключите ШІ зі своїм ключем API, текст запитів до ШІ надсилається сервісу цієї моделі — без цього підключення нічого не залишає ваш ПК.</p></details>
+    <details><summary>Як змінити голос помічника?</summary><p>Відкрийте налаштування (кнопка із шестірнею), на вкладці «Загальні налаштування» оберіть голосову модель зі списку. Доступні голоси, встановлені у вашій Windows. Додаткові українські голоси можна завантажити на сайті <a href="https://rhvoice.org/uk-voices/" target="_blank" rel="noopener">rhvoice.org/uk-voices</a> — після встановлення вони з’являться у списку.</p></details>
+    <details><summary>Чи можна змінити ім’я «Норі»?</summary><p>Так. У налаштуваннях введіть будь-яке ім’я в полі «Ім’я асистента».</p></details>
+    <details><summary>Чи потрібен ключ API?</summary><p>Лише для відповідей від ШІ. Основні команди працюють без нього.</p></details>
+    <details><summary>Як вимкнути мікрофон?</summary><p>Увімкніть перемикач «Вимкнути мікрофон» у лівій частині головного вікна.</p></details>
+    <details><summary>Як додати власну команду?</summary><p>Перейдіть на вкладку «Налаштування команд» і натисніть «Створити» або «Імпорт скрипта». Покрокова інструкція з прикладом є в розділі <a href="#custom">«Додавання власних команд»</a>.</p></details>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Створено Black Star Company · © 2026</div>
+</footer>
+
+<div id="lb" role="dialog" aria-label="Збільшений знімок" aria-modal="true"><img alt=""></div>
+
+<script>
+(function(){
+  var lb=document.getElementById('lb'),lbImg=lb.querySelector('img');
+  document.querySelectorAll('.win img').forEach(function(i){
+    i.addEventListener('click',function(){lbImg.src=i.src;lbImg.alt=i.alt;lb.classList.add('open')});
+  });
+  lb.addEventListener('click',function(){lb.classList.remove('open')});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')lb.classList.remove('open')});
+
+  /* ===== Версії беруться з релізів GitHub (автоматично) =====
+     Назва файлу: Імя-ВЕРСІЯ[-стадія][-збірка].zip
+     Приклад: Asistent-2.6.1-alpha-1.zip → версія 2.6.1, alpha, збірка 1 */
+  var REPO='Technic45-creator/Asistent';
+  var EXT=/\.(zip|exe|7z|rar|msi)$/i;
+  /* Запасний варіант, якщо GitHub API недоступний */
+  var FALLBACK=[{file:'Asistent-2.6.1-alpha-1.zip',url:'https://github.com/Technic45-creator/Asistent/releases/download/Asistent/Asistent-2.6.1-alpha-1.zip'}];
+
+  function nums(t){return (t||'').split('.').map(Number)}
+  function cmp(x,y){
+    for(var i=0;i<Math.max(x.length,y.length);i++){
+      var d=(x[i]||0)-(y[i]||0);if(d)return d;
+    }
+    return 0;
+  }
+  function parse(item){
+    var m=item.file.match(/^(.+?)[-_ ]v?(\d+(?:\.\d+)*)(?:[-_ ]([A-Za-z]+))?(?:[-_ ]v?(\d+(?:\.\d+)*))?\.(zip|exe|7z|rar|msi)$/i);
+    var v={file:item.file,url:item.url};
+    if(!m){v.label=item.file;v.ver=[];v.build=[];return v}
+    v.ver=nums(m[2]);v.build=nums(m[4]);
+    v.label=m[2]+(m[3]?' '+m[3]:'')+(m[4]?' (збірка '+m[4]+')':'');
+    return v;
+  }
+  function fromItems(items){
+    var seen={},list=[];
+    items.forEach(function(it){
+      if(!EXT.test(it.file)||seen[it.url])return;
+      seen[it.url]=1;list.push(parse(it));
+    });
+    list.sort(function(p,q){return cmp(q.ver,p.ver)||cmp(q.build,p.build)});
+    return list;
+  }
+  function fromGithub(){
+    return fetch('https://api.github.com/repos/'+REPO+'/releases?per_page=100').then(function(r){
+      if(!r.ok)throw 0;return r.json();
+    }).then(function(releases){
+      var items=[];
+      releases.forEach(function(rel){
+        if(rel.draft)return;
+        (rel.assets||[]).forEach(function(a){items.push({file:a.name,url:a.browser_download_url})});
+      });
+      return items;
+    });
+  }
+
+  var sel=document.getElementById('verSel'),versions=[];
+  function render(list){
+    versions=list;sel.innerHTML='';
+    list.forEach(function(v,i){
+      var o=document.createElement('option');o.value=i;
+      o.textContent=v.label+(i===0&&list.length>1?' — остання':'');
+      sel.appendChild(o);
+    });
+    showVer();
+  }
+  function showVer(){
+    var v=versions[sel.value||0];if(!v)return;
+    document.getElementById('vName').textContent=v.label;
+    document.getElementById('vFile').textContent=v.file;
+    var b=document.getElementById('vBtn');
+    b.href=v.url;b.textContent='Завантажити '+v.file;
+  }
+  sel.addEventListener('change',showVer);
+  render(fromItems(FALLBACK));
+  fromGithub().then(function(items){
+    var all=fromItems(items.concat(FALLBACK));
+    if(all.length)render(all);
+  }).catch(function(){});
+
+  var img=document.getElementById('stateImg');
+  var btns=document.querySelectorAll('.state-switch button');
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      btns.forEach(function(x){x.setAttribute('aria-pressed','false')});
+      b.setAttribute('aria-pressed','true');
+      img.src=b.dataset.src;img.alt=b.dataset.alt;
+    });
+  });
+})();
+</script>
+</body>
+</html>
