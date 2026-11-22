@@ -1,0 +1,13 @@
+# обов'язкове
+vosk
+sounddevice
+keyboard
+requests
+pywin32
+PyQt5
+
+# необов'язкове (вмикається в seting.json)
+keyring            # API-ключ у Диспетчері облікових даних Windows замість user.dat
+edge-tts           # "tts_backend": "edge"  — природніший онлайн-голос
+faster-whisper     # "dialog_stt": "whisper" — точніше розпізнавання в діалозі
+numpy              # потрібен для faster-whisper
