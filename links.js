@@ -7,7 +7,7 @@ window.SITE_LINKS = {
   github:  'https://github.com/Technic45-creator/Asistent',
   youtube: '',   // напр. https://www.youtube.com/@назва_каналу
   discord: '',   // напр. https://discord.gg/код_запрошення
-  tiktok:  'https://www.tiktok.com/@technic4511?is_from_webapp=1&sender_device=pc'
+  tiktok: ''     //'https://www.tiktok.com/@technic4511?is_from_webapp=1&sender_device=pc'
 };
 
 /* ===== Нижче нічого змінювати не потрібно ===== */
