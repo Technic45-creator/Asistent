@@ -352,11 +352,15 @@ footer{padding:36px 0;text-align:center;font-size:.9rem;opacity:.85}
 </main>
 
 <footer>
-  <div class="wrap">Створено Black Star Company · © 2026</div>
+  <div class="wrap">
+    <div class="socials" data-socials aria-label="Соцмережі"></div>
+    Створено Black Star Company · © 2026
+  </div>
 </footer>
 
 <div id="lb" role="dialog" aria-label="Збільшений знімок" aria-modal="true"><img alt=""></div>
 
+<script src="downloads.js"></script>
 <script>
 (function(){
   var lb=document.getElementById('lb'),lbImg=lb.querySelector('img');
@@ -369,10 +373,11 @@ footer{padding:36px 0;text-align:center;font-size:.9rem;opacity:.85}
   /* ===== Версії беруться з релізів GitHub (автоматично) =====
      Назва файлу: Імя-ВЕРСІЯ[-стадія][-збірка].zip
      Приклад: Asistent-2.6.1-alpha-1.zip → версія 2.6.1, alpha, збірка 1 */
-  var REPO='Technic45-creator/Asistent';
+  /* Посилання беруться з файлу downloads.js */
+  var CFG=window.DOWNLOADS||{};
+  var REPO=CFG.repo||'';
   var EXT=/\.(zip|exe|7z|rar|msi)$/i;
-  /* Запасний варіант, якщо GitHub API недоступний */
-  var FALLBACK=[{file:'Asistent-2.6.1-alpha-1.zip',url:'https://github.com/Technic45-creator/Asistent/releases/download/Asistent/Asistent-2.6.1-alpha-1.zip'}];
+  var FALLBACK=CFG.files||[];
 
   function nums(t){return (t||'').split('.').map(Number)}
   function cmp(x,y){
@@ -422,7 +427,8 @@ footer{padding:36px 0;text-align:center;font-size:.9rem;opacity:.85}
     showVer();
   }
   function showVer(){
-    var v=versions[sel.value||0];if(!v)return;
+    var v=versions[sel.value||0];
+    if(!v){document.getElementById('vName').textContent='—';document.getElementById('vFile').textContent='—';document.getElementById('vBtn').removeAttribute('href');return}
     document.getElementById('vName').textContent=v.label;
     document.getElementById('vFile').textContent=v.file;
     var b=document.getElementById('vBtn');
@@ -430,10 +436,12 @@ footer{padding:36px 0;text-align:center;font-size:.9rem;opacity:.85}
   }
   sel.addEventListener('change',showVer);
   render(fromItems(FALLBACK));
-  fromGithub().then(function(items){
-    var all=fromItems(items.concat(FALLBACK));
-    if(all.length)render(all);
-  }).catch(function(){});
+  if(REPO){
+    fromGithub().then(function(items){
+      var all=fromItems(items.concat(FALLBACK));
+      if(all.length)render(all);
+    }).catch(function(){});
+  }
 
   var img=document.getElementById('stateImg');
   var btns=document.querySelectorAll('.state-switch button');
@@ -446,5 +454,6 @@ footer{padding:36px 0;text-align:center;font-size:.9rem;opacity:.85}
   });
 })();
 </script>
+<script src="links.js"></script>
 </body>
 </html>
