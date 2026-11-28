@@ -56,6 +56,15 @@ def test_common():
     write("user.dat", {"name": "Іра", "api_key": "FILEKEY"}, bom=True)
     assert common.load_user()["name"] == "Іра"
     ok("файл із BOM читається")
+    # міграція старих назв файлів
+    for f in ("commands.json", "settings.json", "comand.json", "seting.json"):
+        if os.path.exists(os.path.join(HOME, f)): os.remove(os.path.join(HOME, f))
+    write("comand.json", {"a": {}}); write("seting.json", {"volume": 7})
+    assert common.read_json(common.commands_file()) == {"a": {}}
+    assert common.load_json_file(common.settings_file())["volume"] == 7
+    assert not os.path.exists(os.path.join(HOME, "comand.json")) and os.path.exists(os.path.join(HOME, "settings.json"))
+    for f in ("commands.json", "settings.json"): os.remove(os.path.join(HOME, f))
+    ok("старі comand.json / seting.json автоматично перейменовуються")
     write("broken.json", "{ nope")
     assert common.read_json(os.path.join(HOME, "broken.json")) is None
     assert os.path.exists(os.path.join(HOME, "broken.json.bad")) and common.LOAD_ERRORS
@@ -388,9 +397,9 @@ def test_assistant():
     print("asistent3")
     clean_phrase_files()
     import asistent3 as A
-    write("comand.json", {"browser": {"keywords": ["браузер"], "action": "open_website", "url": "https://x", "speak": "Ок."},
+    write("commands.json", {"browser": {"keywords": ["браузер"], "action": "open_website", "url": "https://x", "speak": "Ок."},
                           "talk": {"keywords": ["поговоримо"], "action": "start_dialog"}})
-    write("seting.json", {"assistant_name": "Зоря", "mute_microphone": True, "volume": 20})
+    write("settings.json", {"assistant_name": "Зоря", "mute_microphone": True, "volume": 20})
     write("user.dat", {"name": "Іра", "api_key": "", "ai_model": "m", "city": "Київ"}, bom=True)
     a = A.Assistant(); spoken = []
     a.tts.speak = a.commands.speak = spoken.append
@@ -398,7 +407,7 @@ def test_assistant():
     assert a.name == "Зоря" and a.muted and "зоря" in a.wake_words and a.cfg("volume") == 20
     assert a.cfg("hotkey") == "f10" and a.cfg("builtins") is True
     assert "Київ" in a.system_prompt() and "Зоря" in a.system_prompt()
-    write("seting.json", {"assistant_name": "Норі"}); write("comand.json", "{ broken")
+    write("settings.json", {"assistant_name": "Норі"}); write("commands.json", "{ broken")
     a.reload_config()
     assert not a.muted and "нові" in a.wake_words and "browser" in a.commands_data
     ok("конфіг: ім'я, mute, слова активації, reload, пошкоджений файл не стирає стан")
@@ -555,7 +564,7 @@ def test_phrases():
     ok("асистент: фонова генерація, команда phrases (force), без ключа — не запускається")
 
 
-# ══ ваш comand.json: конфлікти, варіанти, stop_dialog ═════════════════════════
+# ══ ваш commands.json: конфлікти, варіанти, stop_dialog ═════════════════════════
 USER_COMMANDS = {
     "open_google": {"keywords": ["інтернет", "браузер"], "action": "open_website", "url": "https://g",
                     "speak": ["Відкриваю браузер.", "Зараз відкрию браузер.", "Уже відкриваю, {user}."]},
@@ -572,7 +581,7 @@ USER_COMMANDS = {
 
 
 def test_user_commands():
-    print("ваш comand.json")
+    print("ваш commands.json")
     import commands as C
     from matching import has_kw
     assert not has_kw("сонячна", "сон") and has_kw("хочу сон", "сон") and has_kw("ляж в сон", "сон")
@@ -601,7 +610,7 @@ def test_user_commands():
     for _ in range(80):
         run("відкрий браузер"); seen.add(spoken[-1])
     assert seen == {"Відкриваю браузер.", "Зараз відкрию браузер.", "Уже відкриваю, друже."}, seen
-    ok("варіанти speak з comand.json: випадкові, {user} підставляється")
+    ok("варіанти speak з commands.json: випадкові, {user} підставляється")
 
     out = run("стоп"); assert out.kind == "stop_dialog" and out.phrase in {"Гаразд, поговорили.", "Завершую розмову."}
     assert c.dialog_stop("стоп") in {"Гаразд, поговорили.", "Завершую розмову."}
@@ -610,7 +619,7 @@ def test_user_commands():
     ok("stop_dialog: короткі «стоп/досить» у діалозі; довга фраза з «досить» розмову не обриває")
 
     import asistent3 as A, phrases as PH
-    write("comand.json", USER_COMMANDS); write("seting.json", {}); write("user.dat", {"name": "Іра"})
+    write("commands.json", USER_COMMANDS); write("settings.json", {}); write("user.dat", {"name": "Іра"})
     clean_phrase_files()
     a = A.Assistant(); said = []; a.tts.speak = a.commands.speak = said.append; a.tts.stop = lambda: said.append("STOP")
     a.load_config(first_run=True)
@@ -632,8 +641,8 @@ def simulate_loop(script, wake_grammar=False, settle=0.6):
     """Крутить головний цикл із підробленим розпізнавачем: кожна 5-а порція звуку = фраза зі script."""
     import asistent3 as A
     clean_phrase_files()
-    write("seting.json", {"assistant_name": "Норі", "wake_grammar": wake_grammar, "active_timeout": 0.3, "echo_tail": 0.05})
-    write("comand.json", {"browser": {"keywords": ["браузер"], "action": "open_website", "url": "https://x", "speak": "Ок."}})
+    write("settings.json", {"assistant_name": "Норі", "wake_grammar": wake_grammar, "active_timeout": 0.3, "echo_tail": 0.05})
+    write("commands.json", {"browser": {"keywords": ["браузер"], "action": "open_website", "url": "https://x", "speak": "Ок."}})
     write("user.dat", {"name": "Іра"})
     a = A.Assistant(); events = []
     a.tts.speak = lambda t: events.append(("say", t))

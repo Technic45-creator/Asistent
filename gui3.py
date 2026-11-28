@@ -10,7 +10,7 @@ import contextlib
 import webbrowser
 from datetime import datetime
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 
 import ai
 import common
@@ -31,7 +31,7 @@ RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 API_KEY_URL = "https://aistudio.google.com"
 
 
-# Відображення логів: значення, що зберігаються в seting.json
+# Відображення логів: значення, що зберігаються в settings.json
 LOG_VIS_SHOW = "show"          # показувати всі логи
 LOG_VIS_PARTIAL = "partial"    # приховати частково (лише системні повідомлення та помилки)
 LOG_VIS_HIDDEN = "hidden"      # приховати повністю
@@ -101,6 +101,7 @@ _TAG_CATEGORY = {
     "РОЗПІЗНАНО": "heard", "ДІАЛОГ": "heard", "TTS": "say",
     "AI": "ai", "ФРАЗИ": "ai", "WHISPER": "ai",
     "АКТИВАЦІЯ": "activate", "HOTKEY": "activate", "F10": "activate",
+    "СИСТЕМА": "system", "КОНФІГ": "system", "VOSK": "system", "STATE": "system",
 }
 _ERROR_WORDS = ("помил", "traceback", "exception", "error", "fail", "не вдалося", "критична")
 _WARN_WORDS = ("увага", "warning", "не знайдено", "недоступн", "не відповів", "ігнорую", "втрачено")
@@ -148,10 +149,10 @@ def _arrow_image():
         return _ARROW_PATH
     try:
         pm = QtGui.QPixmap(12, 8)
-        pm.fill(QtCore.Qt.transparent)
+        pm.fill(QtCore.Qt.GlobalColor.transparent)
         painter = QtGui.QPainter(pm)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing)
-        painter.setPen(QtCore.Qt.NoPen)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(QtGui.QColor("#0a1640"))
         painter.drawPolygon(QtGui.QPolygon([QtCore.QPoint(1, 1), QtCore.QPoint(11, 1), QtCore.QPoint(6, 7)]))
         painter.end()
@@ -431,7 +432,7 @@ def set_autostart(enabled):
 class WelcomeWindow(QtWidgets.QMainWindow, Ui_Welcome):
     """Вікно привітання: 5 кроків реєстрації + початкові налаштування.
 
-    Після успішного завершення створює user.dat і seting.json та
+    Після успішного завершення створює user.dat і settings.json та
     випромінює сигнал registrationFinished(user_data, settings).
     """
 
@@ -465,7 +466,7 @@ class WelcomeWindow(QtWidgets.QMainWindow, Ui_Welcome):
             edit.clear()
 
         # API ключ приховуємо, як у gui.py (show="*")
-        self.APIKeyEdit.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.APIKeyEdit.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
 
         # QRadioButton за замовчуванням не можна вимкнути повторним кліком
         self.HideToTray.setAutoExclusive(False)
@@ -492,7 +493,7 @@ class WelcomeWindow(QtWidgets.QMainWindow, Ui_Welcome):
         ])
         for view in (self.LogDisplay, self.LocationList, self.NameList,
                      self.AIList, self.UsetDataEdit):
-            view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+            view.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
             view.setWordWrap(True)
 
     @staticmethod
@@ -559,7 +560,7 @@ class WelcomeWindow(QtWidgets.QMainWindow, Ui_Welcome):
         self.VolumeSlider.valueChanged.connect(self._on_volume_changed)
 
     def _load_into_widgets(self):
-        """Підставляє збережені user.dat / seting.json у поля."""
+        """Підставляє збережені user.dat / settings.json у поля."""
         u, s = self.user_data, self.settings
 
         self.lineEdit.setText(u.get("name", ""))
@@ -697,9 +698,9 @@ class WelcomeWindow(QtWidgets.QMainWindow, Ui_Welcome):
             answer = QtWidgets.QMessageBox.question(
                 self, "API ключ",
                 "Ви обрали модель ШІ, але не вказали API ключ.\nПродовжити без ключа?",
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                QtWidgets.QMessageBox.No)
-            return answer == QtWidgets.QMessageBox.Yes
+                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+                QtWidgets.QMessageBox.StandardButton.No)
+            return answer == QtWidgets.QMessageBox.StandardButton.Yes
         return True
 
     def open_api_site(self):
@@ -801,7 +802,7 @@ class SlidingStackedWidget(QtWidgets.QStackedWidget):
         anim_nxt.setEndValue(QtCore.QPoint(0, 0))
         for anim in (anim_cur, anim_nxt):
             anim.setDuration(self._duration)
-            anim.setEasingCurve(QtCore.QEasingCurve.InOutCubic)
+            anim.setEasingCurve(QtCore.QEasingCurve.Type.InOutCubic)
 
         self._group = QtCore.QParallelAnimationGroup(self)
         self._group.addAnimation(anim_cur)
@@ -828,7 +829,7 @@ class CommandDialog(QtWidgets.QDialog):
         self.setWindowTitle("Редагування команди" if key else "Нова команда")
         self.setMinimumWidth(600)
         self.resize(640, 440)
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)     # прибираємо кнопку «?»
+        self.setWindowFlag(QtCore.Qt.WindowType.WindowContextHelpButtonHint, False)     # прибираємо кнопку «?»
         if parent is not None and not parent.windowIcon().isNull():
             self.setWindowIcon(parent.windowIcon())
         self.setStyleSheet(dialog_qss("QDialog"))                              # стиль головного вікна
@@ -852,7 +853,7 @@ class CommandDialog(QtWidgets.QDialog):
         self.combo_action.setEditText(cmd.get("action", ""))
         self.edit_params = QtWidgets.QPlainTextEdit()
         self.edit_params.setMinimumHeight(120)
-        self.edit_params.setFont(QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont))
+        self.edit_params.setFont(QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.SystemFont.FixedFont))
         self.edit_params.setPlainText(json.dumps(params, ensure_ascii=False, indent=4) if params else "")
         speak_value = cmd.get("speak", "")
         if isinstance(speak_value, list):
@@ -864,31 +865,31 @@ class CommandDialog(QtWidgets.QDialog):
 
         for edit in (self.edit_key, self.edit_keywords, self.edit_speak):    # блідіші підказки у полях
             pal = edit.palette()
-            pal.setColor(QtGui.QPalette.PlaceholderText, QtGui.QColor(10, 22, 64, 130))
+            pal.setColor(QtGui.QPalette.ColorRole.PlaceholderText, QtGui.QColor(10, 22, 64, 130))
             edit.setPalette(pal)
 
         form = QtWidgets.QFormLayout(self)
         form.setContentsMargins(16, 16, 16, 14)
         form.setHorizontalSpacing(12)
         form.setVerticalSpacing(10)
-        form.setLabelAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+        form.setLabelAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        form.setFieldGrowthPolicy(QtWidgets.QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         form.addRow("ID / Ключ команди:", self.edit_key)
         form.addRow("Ключові слова (через кому):", self.edit_keywords)
         form.addRow("Тип дії (action):", self.combo_action)
         form.addRow("Параметри дії (JSON):", self.edit_params)
         form.addRow("Відповідь (варіанти через |):", self.edit_speak)
-        self.combo_action.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.combo_action.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         for row in range(form.rowCount()):                 # однакова ширина «плашок» підписів
-            label = form.itemAt(row, QtWidgets.QFormLayout.LabelRole)
+            label = form.itemAt(row, QtWidgets.QFormLayout.ItemRole.LabelRole)
             if label is not None and label.widget() is not None:
                 label.widget().setMinimumWidth(250)
         for edit in (self.edit_key, self.edit_keywords, self.edit_speak):
             edit.setCursorPosition(0)                      # довгий текст показуємо з початку
 
-        box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
-        box.button(QtWidgets.QDialogButtonBox.Ok).setText("Зберегти")
-        box.button(QtWidgets.QDialogButtonBox.Cancel).setText("Скасувати")
+        box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+        box.button(QtWidgets.QDialogButtonBox.StandardButton.Ok).setText("Зберегти")
+        box.button(QtWidgets.QDialogButtonBox.StandardButton.Cancel).setText("Скасувати")
         box.accepted.connect(self.accept)
         box.rejected.connect(self.reject)
         form.addRow(box)
@@ -921,14 +922,14 @@ class CommandDialog(QtWidgets.QDialog):
         if overlaps:
             lines = "\n".join(f"• «{mine}» ↔ «{theirs}» (команда {other})" for mine, other, theirs in overlaps[:6])
             box = QtWidgets.QMessageBox(
-                QtWidgets.QMessageBox.Question, "Схожі ключові слова",
+                QtWidgets.QMessageBox.Icon.Question, "Схожі ключові слова",
                 f"Ці слова перетинаються з іншими командами:\n{lines}\n\n"
                 "Коли збігаються обидві, спрацює команда з довшим ключовим словом. Зберегти?",
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, self)
-            box.button(QtWidgets.QMessageBox.Yes).setText("Так, зберегти")
-            box.button(QtWidgets.QMessageBox.No).setText("Ні, змінити")
-            box.setDefaultButton(QtWidgets.QMessageBox.Yes)
-            if box.exec_() != QtWidgets.QMessageBox.Yes:
+                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No, self)
+            box.button(QtWidgets.QMessageBox.StandardButton.Yes).setText("Так, зберегти")
+            box.button(QtWidgets.QMessageBox.StandardButton.No).setText("Ні, змінити")
+            box.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Yes)
+            if box.exec() != QtWidgets.QMessageBox.StandardButton.Yes:
                 return
 
         self.result_key = key
@@ -967,7 +968,7 @@ class AsistentApp(QtWidgets.QMainWindow):
 
         # Дві сторінки в одному вікні: головна (gui) і налаштування (setings)
         self.stack = SlidingStackedWidget(self)
-        self.stack.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.stack.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self.stack.setContentsMargins(0, 0, 0, 0)
         self.setCentralWidget(self.stack)
 
@@ -981,7 +982,7 @@ class AsistentApp(QtWidgets.QMainWindow):
 
         # QMainWindow завжди має прапорець Qt.Window — робимо з нього звичайний вбудований віджет
         for page in (self.page_main, self.page_settings):
-            page.setWindowFlags(QtCore.Qt.Widget)
+            page.setWindowFlags(QtCore.Qt.WindowType.Widget)
 
         self.stack.addWidget(self.page_main)
         self.stack.addWidget(self.page_settings)
@@ -1053,8 +1054,8 @@ class AsistentApp(QtWidgets.QMainWindow):
 
     def confirm(self, title, text):
         return QtWidgets.QMessageBox.question(
-            self, title, text, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
-        ) == QtWidgets.QMessageBox.Yes
+            self, title, text, QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
+        ) == QtWidgets.QMessageBox.StandardButton.Yes
 
     # ------------------------------------------------------------------
     # ГОЛОВНА СТОРІНКА
@@ -1064,12 +1065,12 @@ class AsistentApp(QtWidgets.QMainWindow):
 
         self.info_model = QtCore.QStringListModel(self)
         m.AsistentInfo.setModel(self.info_model)
-        m.AsistentInfo.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        m.AsistentInfo.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
 
         m.LogDisplay.setSpacing(1)                  # тонкі проміжки між кольоровими рядками
-        m.LogDisplay.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        m.LogDisplay.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         m.LogDisplay.customContextMenuRequested.connect(self.log_context_menu)
-        m.LogDisplay.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        m.LogDisplay.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         m.LogDisplay.setWordWrap(True)
 
         # Самотній QRadioButton за замовчуванням не можна вимкнути кліком
@@ -1084,7 +1085,7 @@ class AsistentApp(QtWidgets.QMainWindow):
         self.state_label = QtWidgets.QLabel(m.centralwidget)
         self.state_label.setGeometry(QtCore.QRect(10, 125, 171, 90))
         self.state_label.setWordWrap(True)
-        self.state_label.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        self.state_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop | QtCore.Qt.AlignmentFlag.AlignLeft)
         self.state_label.setStyleSheet("background: transparent; color: white; font-size: 13px; font-weight: bold;")
         self.set_progress("stopped")
 
@@ -1197,7 +1198,7 @@ class AsistentApp(QtWidgets.QMainWindow):
         lw.clear()
         if self.settings.get("log_visibility", LOG_VIS_SHOW) == LOG_VIS_HIDDEN:
             item = QtWidgets.QListWidgetItem("Логи приховано (Налаштування → Відображення логів)")
-            item.setFlags(QtCore.Qt.NoItemFlags)
+            item.setFlags(QtCore.Qt.ItemFlag.NoItemFlags)
             lw.addItem(item)
             return
         for line in self.log_buffer:
@@ -1205,17 +1206,41 @@ class AsistentApp(QtWidgets.QMainWindow):
                 lw.addItem(self._make_log_item(line))
         lw.scrollToBottom()
 
+    def _legend_icon(self, category):
+        """Квадратик у кольорі категорії (для легенди в меню)."""
+        fg, bg, _bold = LOG_STYLES[category]
+        pm = QtGui.QPixmap(16, 16)
+        pm.fill(QtGui.QColor(fg))
+        painter = QtGui.QPainter(pm)
+        painter.fillRect(2, 2, 12, 12, QtGui.QColor(*bg[:3]))
+        painter.end()
+        return QtGui.QIcon(pm)
+
     def log_context_menu(self, pos):
         menu = QtWidgets.QMenu(self)
         act_copy = menu.addAction("Копіювати")
         act_clear = menu.addAction("Очистити логи")
-        chosen = menu.exec_(self.ui_main.LogDisplay.mapToGlobal(pos))
+        menu.addSeparator()
+        act_colors = menu.addAction("Кольорові логи")
+        act_colors.setCheckable(True)
+        act_colors.setChecked(bool(self.settings.get("log_colors", True)))
+        legend = menu.addMenu("Що означають кольори")
+        for category, label in LOG_LEGEND.items():
+            legend.addAction(self._legend_icon(category), label).setEnabled(False)
+        chosen = menu.exec(self.ui_main.LogDisplay.mapToGlobal(pos))
         if chosen == act_copy:
             items = self.ui_main.LogDisplay.selectedItems()
             if items:
                 QtWidgets.QApplication.clipboard().setText("\n".join(i.text() for i in items))
         elif chosen == act_clear:
             self.log_buffer.clear()
+            self.refresh_log_display()
+        elif chosen == act_colors:
+            self.settings["log_colors"] = act_colors.isChecked()
+            try:
+                save_json_file(SETTINGS_FILE, self.settings)
+            except OSError as e:
+                self.append_log(f"[ПОМИЛКА] Не вдалося зберегти {SETTINGS_FILE}: {e}")
             self.refresh_log_display()
 
     # ------------------------------------------------------------------
@@ -1396,7 +1421,7 @@ class AsistentApp(QtWidgets.QMainWindow):
 
         # Кнопка під списком даних користувача: перевірити ключ і обрати модель зі списку API
         s.UsetDataEdit.setGeometry(QtCore.QRect(425, 60, 341, 195))
-        bold = QtGui.QFont("Segoe UI", 10, QtGui.QFont.Bold)
+        bold = QtGui.QFont("Segoe UI", 10, QtGui.QFont.Weight.Bold)
         self.btn_check_key = QtWidgets.QPushButton("Перевірити ключ і обрати модель", s.tab_1)
         self.btn_check_key.setGeometry(QtCore.QRect(425, 262, 341, 34))
         self.btn_check_key.setFont(bold)
@@ -1418,19 +1443,19 @@ class AsistentApp(QtWidgets.QMainWindow):
 
         self.user_model = QtGui.QStandardItemModel(self)
         s.UsetDataEdit.setModel(self.user_model)
-        s.UsetDataEdit.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        s.UsetDataEdit.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         s.UsetDataEdit.setToolTip("Двічі клікніть по рядку, щоб змінити значення")
         s.UsetDataEdit.doubleClicked.connect(self.edit_user_field)
 
         # --- Команди ---
         self.cmd_model = QtGui.QStandardItemModel(self)
         s.ComandList.setModel(self.cmd_model)
-        s.ComandList.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        s.ComandList.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         s.ComandList.selectionModel().selectionChanged.connect(self.update_preview)
 
         self.preview_model = QtCore.QStringListModel(self)
         s.ComandPreivew.setModel(self.preview_model)
-        s.ComandPreivew.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        s.ComandPreivew.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
 
         # Перевірка фрази: яка команда спрацює (з урахуванням вимкнених і найдовшого збігу)
         s.ComandPreivew.setGeometry(QtCore.QRect(170, 10, 601, 215))
@@ -1439,7 +1464,7 @@ class AsistentApp(QtWidgets.QMainWindow):
         self.test_edit.setPlaceholderText("Фраза для перевірки, напр.: відкрий браузер")
         self.test_btn = QtWidgets.QPushButton("Що спрацює?", s.tab_2)
         self.test_btn.setGeometry(QtCore.QRect(510, 232, 261, 34))
-        self.test_btn.setFont(QtGui.QFont("Segoe UI", 10, QtGui.QFont.Bold))
+        self.test_btn.setFont(QtGui.QFont("Segoe UI", 10, QtGui.QFont.Weight.Bold))
         self.test_btn.clicked.connect(self.test_command_phrase)
         self.test_edit.returnPressed.connect(self.test_command_phrase)
 
@@ -1575,14 +1600,14 @@ class AsistentApp(QtWidgets.QMainWindow):
             value = self.user_data.get(key, "") or ""
             shown = ("•" * 8 if value else "") if key == "api_key" else value
             item = QtGui.QStandardItem(f"{label}: {shown}")
-            item.setData(key, QtCore.Qt.UserRole)
+            item.setData(key, QtCore.Qt.ItemDataRole.UserRole)
             item.setEditable(False)
             self.user_model.appendRow(item)
 
     def edit_user_field(self, index):
-        key = index.data(QtCore.Qt.UserRole)
+        key = index.data(QtCore.Qt.ItemDataRole.UserRole)
         label = dict(USER_FIELDS).get(key, key)
-        mode = QtWidgets.QLineEdit.Password if key == "api_key" else QtWidgets.QLineEdit.Normal
+        mode = QtWidgets.QLineEdit.EchoMode.Password if key == "api_key" else QtWidgets.QLineEdit.EchoMode.Normal
         text, ok = QtWidgets.QInputDialog.getText(
             self, "Редагування даних користувача", f"{label}:", mode, self.user_data.get(key, "") or ""
         )
@@ -1672,7 +1697,7 @@ class AsistentApp(QtWidgets.QMainWindow):
     # ---- Команди ----
     def current_command_key(self):
         idx = self.ui_set.ComandList.currentIndex()
-        return idx.data(QtCore.Qt.UserRole) if idx.isValid() else None
+        return idx.data(QtCore.Qt.ItemDataRole.UserRole) if idx.isValid() else None
 
     def refresh_commands_list(self, select_key=None):
         if select_key is None:
@@ -1683,7 +1708,7 @@ class AsistentApp(QtWidgets.QMainWindow):
             cmd = self.commands_data.get(key) or {}
             disabled = isinstance(cmd, dict) and cmd.get("disabled")
             item = QtGui.QStandardItem(f"{key}  (вимкнено)" if disabled else key)
-            item.setData(key, QtCore.Qt.UserRole)
+            item.setData(key, QtCore.Qt.ItemDataRole.UserRole)
             item.setEditable(False)
             if disabled:
                 item.setForeground(QtGui.QBrush(QtGui.QColor("#555555")))
@@ -1730,7 +1755,7 @@ class AsistentApp(QtWidgets.QMainWindow):
 
     def create_command(self):
         dlg = CommandDialog(self)
-        if dlg.exec_() != QtWidgets.QDialog.Accepted:
+        if dlg.exec() != QtWidgets.QDialog.DialogCode.Accepted:
             return
         key, cmd = dlg.result_key, dlg.result_cmd
         if key in self.commands_data and not self.confirm("Підтвердження", f"Команда '{key}' вже існує. Перезаписати?"):
@@ -1746,7 +1771,7 @@ class AsistentApp(QtWidgets.QMainWindow):
             return
         old_cmd = self.commands_data.get(old_key, {})
         dlg = CommandDialog(self, old_key, old_cmd)
-        if dlg.exec_() != QtWidgets.QDialog.Accepted:
+        if dlg.exec() != QtWidgets.QDialog.DialogCode.Accepted:
             return
         key, cmd = dlg.result_key, dlg.result_cmd
         if key != old_key and key in self.commands_data:
@@ -1824,7 +1849,7 @@ class AsistentApp(QtWidgets.QMainWindow):
         if not QtWidgets.QSystemTrayIcon.isSystemTrayAvailable():
             return
         icon = self.app_icon if not self.app_icon.isNull() else \
-            self.style().standardIcon(QtWidgets.QStyle.SP_ComputerIcon)
+            self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_ComputerIcon)
         self.tray = QtWidgets.QSystemTrayIcon(icon, self)
         self.tray.setToolTip("Asistent")
         menu = QtWidgets.QMenu()
@@ -1838,7 +1863,7 @@ class AsistentApp(QtWidgets.QMainWindow):
         self._tray_menu = menu
         self.tray.activated.connect(
             lambda reason: self.restore_from_tray()
-            if reason in (QtWidgets.QSystemTrayIcon.Trigger, QtWidgets.QSystemTrayIcon.DoubleClick) else None
+            if reason in (QtWidgets.QSystemTrayIcon.ActivationReason.Trigger, QtWidgets.QSystemTrayIcon.ActivationReason.DoubleClick) else None
         )
 
     def restore_from_tray(self):
@@ -1865,7 +1890,7 @@ class AsistentApp(QtWidgets.QMainWindow):
                 self.hide()
                 self.tray.show()
                 self.tray.showMessage("Asistent", "Програма працює у треї.",
-                                      QtWidgets.QSystemTrayIcon.Information, 2000)
+                                      QtWidgets.QSystemTrayIcon.MessageIcon.Information, 2000)
                 return
             if not self.confirm_exit():
                 event.ignore()
@@ -1879,8 +1904,9 @@ class AsistentApp(QtWidgets.QMainWindow):
 
 # ==================== ТОЧКА ВХОДУ ====================
 def main():
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+    # Qt6: HiDPI-масштабування ввімкнене завжди; лише просимо точні (не округлені) коефіцієнти
+    QtGui.QGuiApplication.setHighDpiScaleFactorRoundingPolicy(
+        QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QtWidgets.QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)    # потрібно для роботи в треї
 
@@ -1915,7 +1941,7 @@ def main():
         windows["welcome"] = welcome
         welcome.show()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

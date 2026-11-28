@@ -1,0 +1,14 @@
+{
+    "assistant_name": "Норі",
+    "autostart": true,
+    "log_visibility": "show",
+    "volume": 45,
+    "tts_model": "",
+    "tts_model_id": "",
+    "auto_update": true,
+    "hide_to_tray": true,
+    "mute_microphone": false,
+    "auto_start_assistant": false,
+    "log_colors": true,
+    "log_filter": []
+}

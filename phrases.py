@@ -9,7 +9,7 @@
 
 У фразах можна використовувати плейсхолдери: {name} — ім'я асистента, {user} — ім'я користувача,
 та специфічні для ключа (напр. {duration}, {time}). Їх треба зберігати без змін.
-У comand.json поле "speak" може бути рядком або списком варіантів."""
+У commands.json поле "speak" може бути рядком або списком варіантів."""
 import hashlib
 import json
 import logging
@@ -92,7 +92,7 @@ class Phrases:
         self.use_ai = True
         self._file = {}                  # ключ -> [варіанти] з phrases.json
         self._cache = {}                 # ключ -> {"seed": хеш, "ts": час, "variants": [...]}
-        self._commands = {}              # "cmd:<id>" -> [варіанти speak із comand.json]
+        self._commands = {}              # "cmd:<id>" -> [варіанти speak із commands.json]
         self._no_ai = set()              # команди з "ai_variants": false — лише ваші варіанти
         self._last = {}
         self._lock = threading.RLock()

@@ -4,7 +4,7 @@ sounddevice
 keyboard
 requests
 pywin32
-PyQt5
+PyQt6
 
 # необов'язкове (вмикається в seting.json)
 keyring            # API-ключ у Диспетчері облікових даних Windows замість user.dat

@@ -1,0 +1,20 @@
+{
+    "assistant_name": "Норі",
+    "volume": 60,
+    "hotkey": "f10",
+    "stop_hotkey": "f9",
+    "tts_backend": "sapi",
+    "edge_voice": "uk-UA-PolinaNeural",
+    "ai_stream": true,
+    "ai_tools": true,
+    "ai_fallback": true,
+    "builtins": true,
+    "dialog_stt": "vosk",
+    "whisper_model": "small",
+    "wake_grammar": false,
+    "active_timeout": 10,
+    "phrases_ai": true,
+    "phrases_style": "дружній, з легким гумором, коротко",
+    "phrases_ai_variants": 6,
+    "phrases_ai_refresh_days": 7
+}
